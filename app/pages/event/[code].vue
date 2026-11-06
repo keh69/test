@@ -61,7 +61,8 @@
             <div class="evp-ribbon">{{ t('상금과 혜택', 'Prizes') }}</div>
             <p class="mt-3 text-sm text-slate-400">{{ t(`이번 회차 ${metricKo} 순위에 따라 상금을 드립니다`, `Prizes by this round's ${metricEn.toLowerCase()} ranking`) }}</p>
           </div>
-          <div class="mt-7 grid gap-3 sm:grid-cols-2">
+          <!-- 상금표: 순위마다 한 줄씩(한 열) -->
+          <div class="mt-7 grid grid-cols-1 gap-3">
             <div v-for="(p, i) in data.event.prizes" :key="i" class="evp-ticket" :class="ticketClass(i)">
               <div class="evp-ticket-rank">
                 <span class="evp-medal" :class="medalClass(i)">{{ medalText(p.rank, i) }}</span>
@@ -476,7 +477,7 @@ function medalText(rank: string, i: number) {
   return r && r[0] === r[1] ? String(r[0]) : i < 3 ? String(i + 1) : '★'
 }
 function ticketClass(i: number) {
-  return i === 0 ? 'evp-ticket-first sm:col-span-2' : ''
+  return i === 0 ? 'evp-ticket-first' : ''
 }
 function fmtShort(v: number) {
   const n = Number(v || 0)
