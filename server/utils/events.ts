@@ -16,6 +16,15 @@ export type EventRow = {
   description_en?: string
   prizes: Array<{ rank: string; reward: string }>
   enabled: boolean
+  // 테스트·거래소 공통 이벤트(site='all')의 사이트별 진행 여부
+  enabled_test?: boolean
+  enabled_ktx?: boolean
+}
+
+// 이 사이트에서 진행 중인지: 공통 이벤트(site='all')는 enabled_test / enabled_ktx, 예전 사이트별 행은 enabled
+export function isRunningHere(r: EventRow) {
+  if (r.site === 'all') return currentSite() === 'test' ? !!r.enabled_test : !!r.enabled_ktx
+  return r.site === currentSite() && !!r.enabled
 }
 
 // 이번 주(한국시간 월요일 00:00 ~ 다음 월요일 00:00) 구간. offsetWeeks=-1이면 지난주.
@@ -31,10 +40,13 @@ export function kstWeekRange(offsetWeeks = 0, nowMs = Date.now()) {
 
 export async function listSiteEvents(onlyEnabled = true): Promise<EventRow[]> {
   if (!supabaseAppDbEnabled()) return []
-  let q: any = getSupabaseAdminClient().from('bitduck_events').select('*').eq('site', currentSite()).order('id', { ascending: true })
-  if (onlyEnabled) q = q.eq('enabled', true)
-  const { data } = await q
-  return (data || []) as EventRow[]
+  const { data } = await getSupabaseAdminClient()
+    .from('bitduck_events')
+    .select('*')
+    .in('site', ['all', currentSite()])
+    .order('id', { ascending: true })
+  const rows = (data || []) as EventRow[]
+  return onlyEnabled ? rows.filter(isRunningHere) : rows
 }
 
 export async function getSiteEvent(code: string): Promise<EventRow | null> {
@@ -42,10 +54,12 @@ export async function getSiteEvent(code: string): Promise<EventRow | null> {
   const { data } = await getSupabaseAdminClient()
     .from('bitduck_events')
     .select('*')
-    .eq('site', currentSite())
+    .in('site', ['all', currentSite()])
     .eq('code', code)
-    .limit(1)
-  return ((data || [])[0] as EventRow) || null
+    .order('id', { ascending: true })
+  const rows = (data || []) as EventRow[]
+  // 공통 이벤트를 먼저, 없으면 예전 사이트별 행
+  return rows.find((r) => r.site === 'all') || rows[0] || null
 }
 
 export type VolumeRankRow = { rank: number; user_id: number; username: string; volume: number; trades: number }

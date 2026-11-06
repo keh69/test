@@ -1,5 +1,5 @@
 import { getSessionUser } from '../../utils/auth'
-import { fillRankingToSize, getSiteEvent, maskUsername } from '../../utils/events'
+import { fillRankingToSize, getSiteEvent, isRunningHere, maskUsername } from '../../utils/events'
 import { DOW_KO, EVENT_KINDS, eventCycleRange, eventRank, isEventKind, prizesForMember, settleDueEventsThrottled } from '../../utils/event-engine'
 
 // 이벤트 상세 + 이번 회차(또는 지난 회차) 순위. 회원 화면이라 다른 회원 아이디는 가려서 보낸다.
@@ -7,7 +7,7 @@ import { DOW_KO, EVENT_KINDS, eventCycleRange, eventRank, isEventKind, prizesFor
 export default defineEventHandler(async (event) => {
   const code = String(getRouterParam(event, 'code') || '')
   const ev: any = await getSiteEvent(code)
-  if (!ev || !ev.enabled) throw createError({ statusCode: 404, statusMessage: '진행 중인 이벤트가 아닙니다.' })
+  if (!ev || !isRunningHere(ev)) throw createError({ statusCode: 404, statusMessage: '진행 중인 이벤트가 아닙니다.' })
   await settleDueEventsThrottled()
   const week = String(getQuery(event).week || '') === 'last' ? -1 : 0
   const { from, to } = eventCycleRange(ev, week)
