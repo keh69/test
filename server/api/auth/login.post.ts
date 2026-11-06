@@ -57,6 +57,13 @@ export default defineEventHandler(async (event) => {
   }
 
   await clearLoginFailures(user)
+  // 가입 승인상태(ADMIN > 회원목록): 대기 = "가입승인 대기중입니다." 팝업, 거절 = 로그인 없이 홈페이지 첫 화면으로
+  const approval = String(user.approval_status || 'approved')
+  if (String(user.role || 'user') === 'user' && approval !== 'approved') {
+    await logLogin(event, { userId: Number(user.id), username: String(user.username), area: 'main', success: false })
+    if (approval === 'rejected') throw createError({ statusCode: 403, statusMessage: '', data: { rejected: true } })
+    throw createError({ statusCode: 403, statusMessage: '가입승인 대기중입니다.', data: { pending: true } })
+  }
   await createSession(event, Number(user.id), body.remember)
   await logLogin(event, { userId: Number(user.id), username: String(user.username), area: 'main', success: true })
   return { ok: true }

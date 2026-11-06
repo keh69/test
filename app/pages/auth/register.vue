@@ -1,5 +1,14 @@
 <template>
   <div class="mx-auto max-w-xl">
+    <!-- 가입승인 대기 안내 팝업 -->
+    <div v-if="pendingPopup" class="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 px-4" @click.self="closePendingPopup">
+      <div class="w-full max-w-sm rounded-2xl border border-white/10 bg-[#0b1220] p-6 text-center shadow-2xl">
+        <div class="text-3xl">⏳</div>
+        <div class="mt-3 text-lg font-semibold text-white">{{ t('가입승인 대기중입니다.', 'Your sign-up is awaiting approval.') }}</div>
+        <p class="mt-2 text-sm text-slate-400">{{ t('관리자가 승인하면 로그인할 수 있습니다.', 'You can log in once an administrator approves it.') }}</p>
+        <button type="button" class="mt-5 w-full rounded-lg bg-cyan-500 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-400" @click="closePendingPopup">{{ t('확인', 'OK') }}</button>
+      </div>
+    </div>
     <h1 class="text-xl font-semibold">{{ t('회원가입', 'Sign Up') }}</h1>
     <p class="mt-1 text-sm text-slate-400">{{ t('필수 정보를 입력해서 계정을 만드세요.', 'Fill in the required information to create your account.') }}</p>
 
@@ -156,6 +165,12 @@ const agreedToTerms = ref(false)
 const termsOpen = ref(false)
 const loading = ref(false)
 const error = ref<string | null>(null)
+// 가입 후 "가입승인 대기중입니다." 팝업 → 확인을 누르면 홈페이지 첫 화면으로
+const pendingPopup = ref(false)
+function closePendingPopup() {
+  pendingPopup.value = false
+  navigateTo('/')
+}
 const loadingTitle = ref('가입 처리 중입니다...')
 const loadingDesc = ref('계정을 만들고 있습니다.')
 const loadingTitleEn = ref('Signing up...')
@@ -378,7 +393,7 @@ async function onSubmit() {
     loadingDesc.value = '계정을 생성하고 있습니다.'
     loadingTitleEn.value = 'Signing up...'
     loadingDescEn.value = 'Creating your account.'
-    await $fetch('/api/auth/register', {
+    const res = await $fetch<{ ok: boolean; pending?: boolean }>('/api/auth/register', {
       method: 'POST',
       body: {
         username: username.value,
@@ -389,6 +404,13 @@ async function onSubmit() {
         agreedToTerms: agreedToTerms.value
       }
     })
+
+    // 승인 대기 회원은 로그인되지 않는다 → 안내 팝업만 띄운다.
+    if (res?.pending) {
+      loading.value = false
+      pendingPopup.value = true
+      return
+    }
 
     loadingTitle.value = '인증 확인 중입니다...'
     loadingDesc.value = '세션을 적용하고 있습니다.'

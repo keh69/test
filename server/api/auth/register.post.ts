@@ -82,6 +82,8 @@ export default defineEventHandler(async (event) => {
           referral_code: referralCode,
           terms_agreed_at: now,
           role: 'user',
+          // 새로 가입한 회원은 관리자가 승인(ADMIN > 회원목록 > 승인상태)해야 로그인할 수 있다.
+          approval_status: 'pending',
           permissions: {},
           created_at: now,
           updated_at: now
@@ -102,11 +104,8 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 500, statusMessage: msg || '회원가입 처리 중 오류가 발생했습니다.' })
     }
 
-    // 세션 생성(서버리스에서 지속되도록 auth.ts에서 Supabase 세션으로 저장)
-    await createSession(event, userId)
-
+    // 가입만 하고 로그인(세션)은 만들지 않는다 — 승인 대기 상태라 화면에 "가입승인 대기중입니다." 팝업을 띄운다.
     await logAppUser({ id: userId as any, username: body.username, role: 'user' })
-    await logLogin(event, { userId: userId as any, username: body.username, area: 'main', success: true })
 
     // 새 회원 가입 알림(텔레그램)
     await notifyTelegramOfSignup({
@@ -119,7 +118,7 @@ export default defineEventHandler(async (event) => {
       referralCode
     })
 
-    return { ok: true }
+    return { ok: true, pending: true }
   }
 
   const db = getDb()

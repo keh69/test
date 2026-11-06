@@ -1,5 +1,14 @@
 <template>
   <div class="relative left-1/2 right-1/2 -mx-[50vw] -my-6 w-screen min-h-[calc(100vh-73px)]">
+    <!-- 가입승인 대기 안내 팝업 -->
+    <div v-if="pendingPopup" class="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 px-4" @click.self="closePendingPopup">
+      <div class="w-full max-w-sm rounded-2xl border border-white/10 bg-[#0b1220] p-6 text-center shadow-2xl">
+        <div class="text-3xl">⏳</div>
+        <div class="mt-3 text-lg font-semibold text-white">{{ t('가입승인 대기중입니다.', 'Your sign-up is awaiting approval.') }}</div>
+        <p class="mt-2 text-sm text-slate-400">{{ t('관리자가 승인하면 로그인할 수 있습니다.', 'You can log in once an administrator approves it.') }}</p>
+        <button type="button" class="mt-5 w-full rounded-lg bg-cyan-500 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-400" @click="closePendingPopup">{{ t('확인', 'OK') }}</button>
+      </div>
+    </div>
     <div class="grid min-h-[calc(100vh-73px)] md:grid-cols-2">
       <!-- 왼쪽: 브랜드 소개 패널 -->
       <div class="hex-pattern relative hidden overflow-hidden bg-[#0a0d13] px-16 py-16 md:flex md:flex-col md:items-center md:justify-center">
@@ -149,6 +158,11 @@ const password = ref('')
 const rememberId = ref(false)
 const loading = ref(false)
 const error = ref<string | null>(null)
+// 가입승인 대기 안내 팝업
+const pendingPopup = ref(false)
+function closePendingPopup() {
+  pendingPopup.value = false
+}
 // 비밀번호 5회 오류로 접속제한된 계정이면 true(고객센터 안내를 보여준다)
 const locked = ref(false)
 
@@ -218,6 +232,19 @@ async function onSubmit() {
     loadingDescEn.value = 'Please wait a moment.'
     await navigateTo('/exchange/SAMSUNGUSDT')
   } catch (e: any) {
+    const info = e?.data?.data || {}
+    // 가입 거절된 계정: 아무 안내 없이 홈페이지 첫 화면으로
+    if (info.rejected) {
+      error.value = null
+      await navigateTo('/')
+      return
+    }
+    // 가입 승인 대기: 팝업으로 안내
+    if (info.pending) {
+      error.value = null
+      pendingPopup.value = true
+      return
+    }
     locked.value = Number(e?.statusCode || e?.data?.statusCode) === 423
     error.value = e?.data?.statusMessage || t('로그인에 실패했습니다.', 'Login failed.')
   } finally {
