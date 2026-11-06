@@ -43,6 +43,8 @@ export default defineEventHandler(async (event) => {
       titleEn: ev.title_en || '',
       descriptionEn: ev.description_en || '',
       prizes: prizesForMember(ev.prizes || []),
+      // 첫 화면 픽셀아트 어셋(1~10, ADMIN 이벤트 설정에서 고름)
+      asset: Math.min(10, Math.max(1, Number(ev.asset) || 1)),
       closeDow: Number(ev.close_dow) || 0,
       closeTime: String(ev.close_time || '00:00')
     },

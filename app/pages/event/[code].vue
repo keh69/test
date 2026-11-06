@@ -26,7 +26,7 @@
           <!-- 트로피(픽셀아트): 33×40칸 그림을 정수배(6배/7배)로 키워 칸 경계가 흐려지지 않게 한다 -->
           <div class="relative mx-auto mt-6 h-[240px] w-[198px] sm:h-[280px] sm:w-[231px]">
             <div class="evp-glow" />
-            <PixelTrophy class="evp-trophy relative h-full w-full" />
+            <PixelAsset :asset="data.event.asset" class="evp-trophy relative h-full w-full" />
           </div>
 
           <div class="mt-4 text-[15px] font-semibold text-amber-100/90">{{ t('이번 회차 총상금', 'Total prize this round') }}</div>
@@ -246,6 +246,7 @@ type EventDetail = {
     titleEn?: string
     descriptionEn?: string
     prizes: Array<{ rank: string; reward: string }>
+    asset?: number
   }
   // 순위 점수 이름/단위(거래량 USDT, 거래횟수 회, 수익률 % 등) — 점수는 ranking[].volume 에 담겨 온다
   metric?: { ko: string; en: string; unit: string; decimals: number; kindKo: string; kindEn: string }
