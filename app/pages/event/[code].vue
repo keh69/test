@@ -29,7 +29,7 @@
             <PixelTrophy class="evp-trophy relative h-full w-full" />
           </div>
 
-          <div class="mt-4 text-[15px] font-semibold text-amber-100/90">{{ t('이번 주 총상금', 'Total prize this week') }}</div>
+          <div class="mt-4 text-[15px] font-semibold text-amber-100/90">{{ t('이번 회차 총상금', 'Total prize this round') }}</div>
           <div class="evp-prize mt-1 text-[46px] font-black leading-none sm:text-[64px]">
             {{ totalPrizeText }}
           </div>
@@ -43,7 +43,7 @@
           </div>
           <div class="mt-4 inline-flex items-center gap-2 text-[13px] text-slate-300">
             <span class="rounded bg-white/10 px-2 py-0.5 text-[12px] text-slate-200">{{ t('기간', 'Period') }}</span>
-            {{ fmtDay(data.period.from) }} 00:00 ~ {{ fmtDay(lastDay(data.period.to)) }} 23:59 ({{ t('한국시간', 'KST') }})
+            {{ fmtDayTime(data.period.from) }} ~ {{ fmtDayTime(data.period.to) }} ({{ t('한국시간', 'KST') }})
           </div>
 
           <div class="mt-7">
@@ -59,7 +59,7 @@
         <div class="mx-auto max-w-[760px] px-5">
           <div class="text-center">
             <div class="evp-ribbon">{{ t('상금과 혜택', 'Prizes') }}</div>
-            <p class="mt-3 text-sm text-slate-400">{{ t('이번 주 거래량 순위에 따라 상금을 드립니다', 'Prizes by this week\'s volume ranking') }}</p>
+            <p class="mt-3 text-sm text-slate-400">{{ t(`이번 회차 ${metricKo} 순위에 따라 상금을 드립니다`, `Prizes by this round's ${metricEn.toLowerCase()} ranking`) }}</p>
           </div>
           <div class="mt-7 grid gap-3 sm:grid-cols-2">
             <div v-for="(p, i) in data.event.prizes" :key="i" class="evp-ticket" :class="ticketClass(i)">
@@ -115,8 +115,8 @@
                 <div class="mt-1 text-xl font-black text-white">{{ data.mine?.rank ? t(`${data.mine.rank}위`, `#${data.mine.rank}`) : '—' }}</div>
               </div>
               <div>
-                <div class="text-[12px] text-amber-200/80">{{ t('내 거래량', 'My volume') }}</div>
-                <div class="mt-1 text-xl font-black text-white">{{ fmtShort(data.mine?.volume || 0) }}</div>
+                <div class="text-[12px] text-amber-200/80">{{ t(`내 ${metricKo}`, `My ${metricEn.toLowerCase()}`) }}</div>
+                <div class="mt-1 text-xl font-black text-white">{{ fmtMetricShort(data.mine?.volume || 0) }}</div>
               </div>
               <div>
                 <div class="text-[12px] text-amber-200/80">{{ t('예상 상금', 'Expected prize') }}</div>
@@ -135,7 +135,7 @@
                 <template v-if="slot.row">
                   <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full text-lg font-black" :class="medalClass(slot.place - 1)">{{ slot.place }}</div>
                   <div class="mt-2 truncate font-mono text-[14px] font-bold text-white">{{ slot.row.name }}<span v-if="slot.row.isMe" class="text-amber-300"> ({{ t('나', 'me') }})</span></div>
-                  <div class="text-[12px] text-slate-400">{{ fmtShort(slot.row.volume) }} USDT</div>
+                  <div class="text-[12px] text-slate-400">{{ fmtMetricShort(slot.row.volume) }}</div>
                   <div class="evp-podium mt-2" :class="`evp-podium-${slot.place}`">
                     <span class="text-[13px] font-bold text-amber-200">{{ prizeFor(slot.place) }}</span>
                   </div>
@@ -161,7 +161,7 @@
               <div class="grid grid-cols-[44px_minmax(0,1fr)_auto_84px] gap-x-3 border-b border-white/5 px-4 py-2 text-[11px] text-slate-500">
                 <span class="text-center">{{ t('순위', 'Rank') }}</span>
                 <span>{{ t('아이디', 'ID') }}</span>
-                <span class="text-right">{{ t('거래량 (USDT)', 'Volume (USDT)') }}</span>
+                <span class="text-right">{{ t(`${metricKo} (${metricUnit})`, `${metricEn} (${metricUnitEn})`) }}</span>
                 <span class="text-right">{{ t('상금', 'Prize') }}</span>
               </div>
               <div class="evp-pages" @touchstart.passive="onTouchStart" @touchend.passive="onTouchEnd">
@@ -180,7 +180,7 @@
                       <span class="min-w-0 truncate font-mono text-[14px]" :class="r.isMe ? 'font-bold text-white' : 'text-slate-100'">
                         {{ r.name }}<span v-if="r.isMe" class="ml-1 rounded bg-amber-400 px-1.5 py-0.5 font-sans text-[10px] font-bold text-slate-900">{{ t('나', 'ME') }}</span>
                       </span>
-                      <span class="text-right font-mono text-[14px]" :class="r.isMe ? 'text-white' : 'text-slate-200'">{{ fmtUsd(r.volume) }}</span>
+                      <span class="text-right font-mono text-[14px]" :class="r.isMe ? 'text-white' : 'text-slate-200'">{{ fmtMetric(r.volume) }}</span>
                       <span class="text-right text-[12px] font-semibold text-amber-300">{{ prizeFor(r.rank) || '—' }}</span>
                     </div>
                     <!-- 마지막 페이지가 10줄보다 적어도 표 높이가 흔들리지 않게 빈 줄을 채운다 -->
@@ -216,8 +216,8 @@
           </div>
           <p v-if="evDescription" class="mt-3 whitespace-pre-line text-[13px] leading-relaxed text-slate-300">{{ evDescription }}</p>
           <ul class="mt-3 list-disc space-y-1.5 pl-5 text-[13px] leading-relaxed text-slate-400">
-            <li>{{ t('이벤트 기간은 한국시간 기준 매주 월요일 00:00 ~ 일요일 23:59입니다.', 'The event runs weekly, Monday 00:00 to Sunday 23:59 KST.') }}</li>
-            <li>{{ t('거래량은 선물 거래의 체결금액(진입 + 청산, USDT) 합계로 계산합니다.', 'Volume is the sum of filled amounts (open + close, USDT) of futures trades.') }}</li>
+            <li>{{ t(`이벤트는 한국시간 기준 ${closeKo}에 마감되며, 마감 직후 새 회차가 시작됩니다.`, `Each round closes ${closeEn} (KST) and the next round starts right away.`) }}</li>
+            <li>{{ metricRuleText }}</li>
             <li>{{ t('관리자·운영 계정은 순위에서 제외됩니다.', 'Admin accounts are excluded.') }}</li>
             <li>{{ t('자전거래 등 비정상적인 거래가 확인되면 순위와 상금에서 제외될 수 있습니다.', 'Abnormal trading may be excluded from rankings and prizes.') }}</li>
             <li>{{ t('상금은 이벤트 종료 후 최종 순위를 확인해 지급합니다.', 'Prizes are paid after the final ranking is confirmed.') }}</li>
@@ -247,6 +247,9 @@ type EventDetail = {
     descriptionEn?: string
     prizes: Array<{ rank: string; reward: string }>
   }
+  // 순위 점수 이름/단위(거래량 USDT, 거래횟수 회, 수익률 % 등) — 점수는 ranking[].volume 에 담겨 온다
+  metric?: { ko: string; en: string; unit: string; decimals: number; kindKo: string; kindEn: string }
+  closeLabel?: { ko: string; dow: number; time: string }
   period: { from: string; to: string; week: string }
   ranking: Array<{ rank: number; name: string; isMe: boolean; volume: number; trades: number }>
   mine: { rank: number | null; volume: number; trades: number } | null
@@ -309,9 +312,9 @@ function prizeFor(rank: number) {
 
 const steps = computed(() => [
   { title: t('로그인', 'Log in'), desc: t('KTX 회원이면 누구나 자동 참여', 'Every KTX member joins automatically') },
-  { title: t('선물 거래', 'Trade futures'), desc: t('진입·청산할 때마다 거래량이 쌓여요', 'Volume adds up with every open and close') },
+  { title: t('선물 거래', 'Trade futures'), desc: t('거래할 때마다 순위 기록이 쌓여요', 'Every trade counts toward your ranking') },
   { title: t('실시간 순위 확인', 'Check the live ranking'), desc: t('이 페이지에서 내 순위를 바로 확인', 'See your rank right here') },
-  { title: t('상금 지급', 'Get your prize'), desc: t('주간 마감 후 순위대로 지급', 'Paid by final ranking after the week ends') }
+  { title: t('상금 지급', 'Get your prize'), desc: t('마감 후 순위대로 지갑에 자동 지급', 'Paid to your wallet by final rank after closing') }
 ])
 
 // ── 1~100위 순위표(한 페이지 10위씩) ──
@@ -373,6 +376,41 @@ function onTouchEnd(e: TouchEvent) {
 }
 function fmtUsd(v: number) {
   return Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+// ── 이벤트 종류별 점수 표시(거래량/거래횟수/배팅왕/수익왕/수익률왕/승리왕) ──
+const metricKo = computed(() => data.value?.metric?.ko || '거래량')
+const metricEn = computed(() => data.value?.metric?.en || 'Volume')
+const metricUnit = computed(() => data.value?.metric?.unit || 'USDT')
+const metricUnitEn = computed(() => (metricUnit.value === '회' ? 'times' : metricUnit.value))
+const metricDecimals = computed(() => Number(data.value?.metric?.decimals ?? 2))
+function fmtMetric(v: number) {
+  const d = metricDecimals.value
+  return Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })
+}
+function fmtMetricShort(v: number) {
+  const u = isEn.value ? metricUnitEn.value : metricUnit.value
+  if (metricUnit.value === 'USDT') return `${fmtShort(v)} USDT`
+  if (metricUnit.value === '%') return `${fmtMetric(v)}%`
+  return `${fmtMetric(v)}${isEn.value ? ' ' : ''}${u}`
+}
+const EN_DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const closeKo = computed(() => data.value?.closeLabel?.ko || '매주 월요일 00:00')
+const closeEn = computed(() => `every ${EN_DOW[Number(data.value?.closeLabel?.dow) || 0]} ${data.value?.closeLabel?.time || '00:00'}`)
+const metricRuleText = computed(() => {
+  const k = data.value?.event.kind || 'weekly_volume'
+  const rules: Record<string, [string, string]> = {
+    weekly_volume: ['거래량은 선물 거래의 체결금액(진입 + 청산, USDT) 합계로 계산합니다.', 'Volume is the sum of filled amounts (open + close, USDT) of futures trades.'],
+    trade_count: ['거래횟수는 회차 동안 청산까지 끝난 선물 거래의 횟수입니다.', 'Trade count is the number of futures trades closed in the round.'],
+    max_bet: ['배팅왕은 한 번의 거래에 넣은 증거금(배팅금, USDT)이 가장 큰 순서로 정합니다.', 'Biggest bet ranks by the largest margin (USDT) put into a single trade.'],
+    profit_sum: ['수익왕은 회차 동안 실현수익(USDT) 합계가 큰 순서로 정하며, 수익이 있는 회원만 순위에 오릅니다.', 'Top profit ranks by total realized profit (USDT); only members with profit are ranked.'],
+    best_roe: ['수익률왕은 한 번의 거래에서 낸 수익률(ROE, %)이 가장 높은 순서로 정합니다.', 'Best ROE ranks by the highest return (%) on a single trade.'],
+    win_count: ['승리왕은 회차 동안 수익으로 끝난 거래 횟수가 많은 순서로 정합니다.', 'Most wins ranks by the number of trades closed in profit.']
+  }
+  const r = rules[k] || rules.weekly_volume!
+  return t(r[0], r[1])
+})
+function fmtDayTime(iso: string) {
+  return new Date(iso).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
 const podium = computed(() => {
