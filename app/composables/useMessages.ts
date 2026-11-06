@@ -101,7 +101,15 @@ export function useMessages() {
       // 로그인 세션이 만료된 상태로 폴링이 계속 돌면 5초마다 같은 401만 반복되므로,
       // 그 경우엔 폴링을 멈춘다(다시 로그인해서 레이아웃이 재마운트되면 새로 시작됨).
       const status = e?.response?.status ?? e?.statusCode
-      if (status === 401) stopUnreadPolling()
+      if (status === 401) {
+        stopUnreadPolling()
+        // 로그인해 있던 회원의 세션이 끊김(관리자 차단 등) → 로그아웃 처리하고 홈페이지 첫 화면으로
+        const { me } = useMe()
+        if (process.client && me.value) {
+          me.value = null
+          navigateTo('/')
+        }
+      }
     } finally {
       loading.value = false
     }
@@ -113,7 +121,7 @@ export function useMessages() {
     // 안 읽은 쪽지 확인: 8초 간격(예전 5초). 가려진 탭에서도 새 쪽지 알림음이 울려야 하므로 화면이 가려져도 계속 확인한다.
     pollTimer = setInterval(() => {
       refreshUnread()
-    }, 8000)
+    }, 5000)
   }
 
   function stopUnreadPolling() {

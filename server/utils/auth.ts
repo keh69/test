@@ -146,6 +146,8 @@ async function getSessionUserFromDb(token: string): Promise<SessionUser | null> 
       if (session.expires_at && String(session.expires_at) <= now) return null
       const user = await supaSelectOne<any>('bitduck_users', { id: Number(session.user_id) })
       if (!user) return null
+      // 가입 승인상태가 승인이 아닌 회원(대기/거절·차단)은 로그인되지 않은 것으로 본다.
+      if (String(user.role || 'user') === 'user' && String(user.approval_status || 'approved') !== 'approved') return null
       const role = String(user.role) as Role
       return {
         id: Number(user.id),
