@@ -3,7 +3,7 @@
     <div
       v-if="visible"
       :class="isDump
-        ? 'fixed inset-0 z-[9999] flex flex-col bg-[#0b0510] px-4 py-4'
+        ? 'fixed inset-0 z-[10002] flex flex-col bg-[#0b0510] px-4 py-4'
         : 'fixed inset-x-0 bottom-0 z-[200] border-t border-rose-500/30 bg-[#0b0510]/97 px-4 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] backdrop-blur'"
     >
       <div class="mx-auto flex w-full max-w-6xl items-start gap-3" :class="isDump ? 'min-h-0 flex-1' : ''">
@@ -77,7 +77,8 @@ const visible = computed(
   () => (isSuperAdmin.value || !!(error.value as any)?.forced) && !!error.value && error.value.at !== dismissedAt.value
 )
 const historyList = computed(() => errorHistory.value)
-// 차트 덤프 에러(임시): 회원에게는 하단 작은 배너 대신 불투명한 화면 전체로 띄우고, 버튼이 없어 닫을 수 없다.
+// 차트 덤프 에러(임시): 회원에게는 하단 작은 배너 대신 불투명한 화면 전체로 띄우고, 버튼이 없어 닫을 수 없다(F5 새로고침하면 사라짐).
+// z-index 10002: 화이트 테마 반전 막(9999)보다 위에 둬서 테마와 상관없이 항상 같은 색으로 보이게 한다.
 const isDump = computed(() => !!(error.value as any)?.forced && !isSuperAdmin.value)
 
 function entryText(e: ClientErrorEntry) {
